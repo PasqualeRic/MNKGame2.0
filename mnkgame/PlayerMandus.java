@@ -136,38 +136,22 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		return eval;		
 	}
 
-	public double evaluate(MNKBoard b, int depth, boolean myTurn){
+	public double evaluate(MNKBoard board, int depth, boolean myTurn){
 		int player;
-		int scoreP1 = 0; //current player
-		int scoreP2 = 0; //opponent player
-		if(myTurn){ //player 1 ha valore positivo player 2 negativo
-			player = 1;
+		int score = 0; //score attuale
+		if(board.gameState == myWin)
+		{
+			score = 10 + depth; // arriviamo alla vittoria più velocemente
+		}
+		else if(board.gameState == yourWin)
+		{
+			score = -10;
 		}
 		else{
-			player = -1;
+			//da fare il controllo per righe, colonne e diagonali, cercando di rimanere nell'intervallo [-10, 10]
 		}
 		//controllo righe
-		for(int i = 0; i < b.M; i++){
-			for(int j = 0; j < b.N; j++){
-				if(b.cellState(i, j) == MNKCellState.P1 && myWin == MNKGameState.WINP1){
-					scoreP1 += 10;
-				}
-				else if(b.cellState(i, j) == MNKCellState.P2 && myWin == MNKGameState.WINP2){
-					scoreP2 += 10;
-				}
-			}
-		}
-		//controllo colonne
-		for(int i = 0; i < b.N; i++){
-			for(int j = 0; j < b.M; j++){
-				if(b.cellState(i, j) == MNKCellState.P1 && myWin == MNKGameState.WINP1){
-					scoreP1 += 10;
-				}
-				else if(b.cellState(i, j) == MNKCellState.P2 && myWin == MNKGameState.WINP2){
-					scoreP2 += 10;
-				}
-			}
-		}
+		return score;
 	}
 	 
 

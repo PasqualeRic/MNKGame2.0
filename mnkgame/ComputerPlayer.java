@@ -125,6 +125,7 @@ public class ComputerPlayer implements MNKPlayer {
 		
 		MNKCell[] mc = b_.getMarkedCells();
 		MNKCell lastMarkedCell = mc[mc.length-1];  //ultima cella marcata
+		System.out.println("Ultima cella marcata : " + lastMarkedCell);
 		int rows = b_.M;              //num righe
 		int cols = b_.N;              //num colonne
 		int k = b_.K;
@@ -147,6 +148,8 @@ public class ComputerPlayer implements MNKPlayer {
 			MNKCellState[] rowLine;			
 			
 			rowLine = bb[lastMarkedCell.i];
+			System.out.println("Valuto riga " + rowLine.toString());
+
 			score += evaluateLine(rowLine);
 			rowLine = null;			
 		}
@@ -157,7 +160,10 @@ public class ComputerPlayer implements MNKPlayer {
 			
 			for(int row = 0; row < rows; row++){
 				colLine.add(bb[row][lastMarkedCell.j]);
-			}
+			}            
+
+			System.out.println("Valuto colonna " + colLine.toString());
+
 			score += evaluateLine(colLine.toArray(new MNKCellState[colLine.size()]));	
 			colLine = null;				
 		}
@@ -198,6 +204,7 @@ public class ComputerPlayer implements MNKPlayer {
 		}
 		
 		if(diagLine.size() >= k){                       //controllo se il num di celle su tale diagonale è sufficiente a contenere k elementi
+			System.out.println("Valuto diagonale " + diagLine);                   
 			score += evaluateLine(diagLine.toArray(new MNKCellState[diagLine.size()]));				
 		}
 		diagLine = null;
@@ -222,10 +229,14 @@ public class ComputerPlayer implements MNKPlayer {
 			y++;
 		}
 		
-		if(antiDiagLine.size() >= k){                       
+		if(antiDiagLine.size() >= k){    
+			System.out.println("Valuto antidiagonale " + antiDiagLine);                   
 			score += evaluateLine(antiDiagLine.toArray(new MNKCellState[antiDiagLine.size()]));				
 		}
 		antiDiagLine = null;	
+
+		System.out.println("Score che ritorno : " + score);
+		System.out.println("------ fine open ------");
 		
 		return score;
 		
@@ -254,7 +265,7 @@ public class ComputerPlayer implements MNKPlayer {
 		
 		int[] myLine = maxSubLineOccupiedCells(l, myCell);
 
-		System.out.println("Linea mia : " + Arrays.toString(myLine));
+		System.out.println("Mia linea : " + myLine[0] + " di cui " + myLine[1] + " libere");
 		
 		if(myLine[0] >= B.K){
 			score += (myLine[0] - myLine[1]);
@@ -263,7 +274,7 @@ public class ComputerPlayer implements MNKPlayer {
 		//passo a valutare (l'eventuale) sottoriga dell'avversario
 		int[] yourLine = maxSubLineOccupiedCells(l, yourCell);
 		
-		System.out.println("Linea sua : " + Arrays.toString(yourLine));
+		System.out.println("Sua linea : " + myLine[0] + " di cui " + myLine[1] + " libere");
 
 
 		if(yourLine[0] >= B.K){
