@@ -1,13 +1,13 @@
-package mnkgame;
 
+
+package mnkgame;
 
 import java.util.Random;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.lang.Math.*;
 
 
-public class ComputerPlayer implements MNKPlayer {
+public class CmpPlayer implements MNKPlayer {
 	
 	
 	private Random rand;
@@ -15,11 +15,10 @@ public class ComputerPlayer implements MNKPlayer {
 	private MNKGameState myWin;
 	private MNKGameState yourWin;
 	private int TIMEOUT;
-	int numOfCombinations = 0;
 	private long start;             
 
 
-	public ComputerPlayer() {
+	public CmpPlayer() {
 	}
 
 
@@ -31,17 +30,16 @@ public class ComputerPlayer implements MNKPlayer {
 		yourWin = first ? MNKGameState.WINP2 : MNKGameState.WINP1;
 		TIMEOUT = timeout_in_secs;	
 	}
-		//alphabeta pruning
-	public double alphabeta(MNKBoard board_, boolean myNode, int depth, double alpha, double beta, int turns_to_win){
+	
+	
+	//alphabeta pruning
+	public double alphabeta(MNKBoard board_, boolean myNode, int depth, double alpha, double beta){
 		
 		double eval;
-		int iteratore = 0;
-
 		MNKCell fc[] = board_.getFreeCells();
 		
 		if(depth <= 0 || board_.gameState != MNKGameState.OPEN || (System.currentTimeMillis()-start)/1000.0 > TIMEOUT*(99.0/100.0)){
-            //l'albero ha profondità 0, o se non siamo in gioco o se stiamo per terminare la scelta, valutiamo
-/* 			System.out.println("Questa è la situa : ");
+            System.out.println("Questa è la situa : ");
 			System.out.print("Celle libere : ");
 			for(MNKCell cell : board_.getFreeCells()){
 				System.out.print("[" + cell.i + ", " + cell.j + "] ");
@@ -52,34 +50,32 @@ public class ComputerPlayer implements MNKPlayer {
 				System.out.print("[" + cell.i + ", " + cell.j + "] da " + cell.state);
 			}
 			System.out.println("");
-			System.out.println("Profondità = " + depth); */
-			numOfCombinations++;
+			System.out.println("Profondità = " + depth); 
 			eval = evaluate(board_, depth);  
 						
 		}else if(myNode){
 			eval = Integer.MAX_VALUE;
 			
-			for(MNKCell cell : fc){ //per ogni cella libera
-				board_.markCell(cell.i, cell.j); //marchiamo la cella
-				eval = Math.min(eval, alphabeta(board_, false, depth-1, alpha, beta, turns_to_win + 1));
+			for(MNKCell cell : fc){
+				board_.markCell(cell.i, cell.j);
+				eval = Math.min(eval, alphabeta(board_, false, depth-1, alpha, beta));
 				beta = Math.min(eval, beta);
-				board_.unmarkCell(); //togliamo il mark
+				board_.unmarkCell();
 				if(beta <= alpha)
 					break;
 			}
-			iteratore ++;
 			
 		}else{
 			eval = Integer.MIN_VALUE;
-			for(MNKCell cell : fc){ //per ogni cella libera
+			
+			for(MNKCell cell : fc){
 				board_.markCell(cell.i, cell.j);
-				eval = Math.max(eval, alphabeta(board_, true, depth-1, alpha, beta, turns_to_win + 1)); //prendiamo il massimo questa volta
+				eval = Math.max(eval, alphabeta(board_, true, depth-1, alpha, beta));
 				beta = Math.max(eval, alpha);
 				board_.unmarkCell();
 				if(beta <= alpha)
 					break;
 			}			
-			iteratore++;
 		}
 		
 		return eval;		
@@ -93,11 +89,7 @@ public class ComputerPlayer implements MNKPlayer {
 	public double evaluate(MNKBoard b, int d){
 		
 		double eval;
-
-		System.out.println("Combinazione numero : " + numOfCombinations);
-
-		System.out.println(b.gameState);
-
+		
 		if(b.gameState == myWin){
 			eval = 45;
 			eval -= (6 - d);                  //diminuizione score all'aumentare della profondità. Avendo massimo 6 livelli il range è [39, 45]
@@ -110,11 +102,9 @@ public class ComputerPlayer implements MNKPlayer {
 			eval = evalOpenConfig(b);         //valutazione nodo non foglia
 		}
 		
-		System.out.println("EVAL ASSOCIATO : " + eval);
 		return eval;
 	}
 	
-
 	
 	/* Funzione euristica per valutazione nodi non foglia.
 	Segue la seguente logica: valuta le 4 linee (verticale, orizzontale, diagonale ed antidiagonale) che passano per l'ultima cella marcata.
@@ -122,15 +112,12 @@ public class ComputerPlayer implements MNKPlayer {
 	ne restituisce il corrisponente score.
     Lo score che restituisce può essere positivo o negativo, a seconda se la configurazione analizzata è favorevole per noi o per l'avversario.
 	La seguente funzione si limita a sommare gli score restituiti dalle 4 chiamate a evaluateLine()*/
-	public double evalOpenConfig(MNKBoard b_){	
-
-		System.out.println(" ------------ Sono entrato nella eval ----------------");
+	public double evalOpenConfig(MNKBoard b_){
 		
 		double score = 0;
 		
 		MNKCell[] mc = b_.getMarkedCells();
 		MNKCell lastMarkedCell = mc[mc.length-1];  //ultima cella marcata
-		System.out.println("Ultima cella marcata : " + lastMarkedCell);
 		int rows = b_.M;              //num righe
 		int cols = b_.N;              //num colonne
 		int k = b_.K;
@@ -153,8 +140,6 @@ public class ComputerPlayer implements MNKPlayer {
 			MNKCellState[] rowLine;			
 			
 			rowLine = bb[lastMarkedCell.i];
-			System.out.println("Valuto riga " + rowLine.toString());
-
 			score += evaluateLine(rowLine);
 			rowLine = null;			
 		}
@@ -165,10 +150,7 @@ public class ComputerPlayer implements MNKPlayer {
 			
 			for(int row = 0; row < rows; row++){
 				colLine.add(bb[row][lastMarkedCell.j]);
-			}            
-
-			System.out.println("Valuto colonna " + colLine.toString());
-
+			}
 			score += evaluateLine(colLine.toArray(new MNKCellState[colLine.size()]));	
 			colLine = null;				
 		}
@@ -209,7 +191,6 @@ public class ComputerPlayer implements MNKPlayer {
 		}
 		
 		if(diagLine.size() >= k){                       //controllo se il num di celle su tale diagonale è sufficiente a contenere k elementi
-			System.out.println("Valuto diagonale " + diagLine);                   
 			score += evaluateLine(diagLine.toArray(new MNKCellState[diagLine.size()]));				
 		}
 		diagLine = null;
@@ -234,14 +215,10 @@ public class ComputerPlayer implements MNKPlayer {
 			y++;
 		}
 		
-		if(antiDiagLine.size() >= k){    
-			System.out.println("Valuto antidiagonale " + antiDiagLine);                   
+		if(antiDiagLine.size() >= k){                       
 			score += evaluateLine(antiDiagLine.toArray(new MNKCellState[antiDiagLine.size()]));				
 		}
 		antiDiagLine = null;	
-
-		System.out.println("Score che ritorno : " + score);
-		System.out.println("------ fine open ------");
 		
 		return score;
 		
@@ -269,8 +246,6 @@ public class ComputerPlayer implements MNKPlayer {
 		}
 		
 		int[] myLine = maxSubLineOccupiedCells(l, myCell);
-
-		System.out.println("Mia linea : " + myLine[0] + " di cui " + myLine[1] + " libere");
 		
 		if(myLine[0] >= B.K){
 			score += (myLine[0] - myLine[1]);
@@ -279,14 +254,10 @@ public class ComputerPlayer implements MNKPlayer {
 		//passo a valutare (l'eventuale) sottoriga dell'avversario
 		int[] yourLine = maxSubLineOccupiedCells(l, yourCell);
 		
-		System.out.println("Sua linea : " + myLine[0] + " di cui " + myLine[1] + " libere");
-
-
 		if(yourLine[0] >= B.K){
 			score -= (yourLine[0] - yourLine[1]);
 		}
 		
-		System.out.println("Score attuale : " + score);
 		return score;		
 	}	
 
@@ -337,7 +308,7 @@ public class ComputerPlayer implements MNKPlayer {
 
 	public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		start = System.currentTimeMillis();
-		numOfCombinations = 0;
+		
 		if(MC.length > 0) {
 			MNKCell c = MC[MC.length-1]; // Recover the last move from MC
 			B.markCell(c.i,c.j);         // Save the last move in the local MNKBoard
@@ -349,7 +320,7 @@ public class ComputerPlayer implements MNKPlayer {
 		
 		if(myWin == MNKGameState.WINP1 && MC.length==0) //se la prima mossa spetta al mio giocatore può essere effettuata randomicamente
 		{
-			MNKCell c = FC[rand.nextInt(FC.length)];
+			MNKCell c = FC[3];
 			B.markCell(c.i,c.j);
 			return c;
 		}
@@ -360,7 +331,6 @@ public class ComputerPlayer implements MNKPlayer {
 		MNKCell result = FC[pos]; // random move
 		
 		for(MNKCell currentCell : FC) {
-			System.out.println(FC.length);
 			
 			// If time is running out, return the randomly selected  cell
             if((System.currentTimeMillis()-start)/1000.0 > TIMEOUT*(99.0/100.0)) {
@@ -371,20 +341,19 @@ public class ComputerPlayer implements MNKPlayer {
 				"alphabeta()" limitando la ricerca a un numero variabile (ma prefissato) di livelli di profondità in modo da garantire un buon rapporto efficenza computazionale/ottimalità delle mosse.
 				Il massimo numero di livelli di profondità raggiungibile è inversalmente proporzionale al numero di celle libere. */
 				B.markCell(currentCell.i, currentCell.j);	
-				int turns_to_win = 0;
 				
 				if(FC.length > 85)
-					score = alphabeta(B, true, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, turns_to_win);
+					score = alphabeta(B, true, 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
 				else if((FC.length > 50) && (FC.length <= 85))
-					score = alphabeta(B, true, 2, Integer.MIN_VALUE, Integer.MAX_VALUE, turns_to_win);
+					score = alphabeta(B, true, 2, Integer.MIN_VALUE, Integer.MAX_VALUE);
 				else if((FC.length > 30) && (FC.length <= 50))
-					score = alphabeta(B, true, 3, Integer.MIN_VALUE, Integer.MAX_VALUE, turns_to_win);
+					score = alphabeta(B, true, 3, Integer.MIN_VALUE, Integer.MAX_VALUE);
 				else if((FC.length > 20) && (FC.length <= 30))
-					score = alphabeta(B, true, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, turns_to_win);
+					score = alphabeta(B, true, 4, Integer.MIN_VALUE, Integer.MAX_VALUE);
 				else if((FC.length > 16) && (FC.length <= 20))
-					score = alphabeta(B, true, 5, Integer.MIN_VALUE, Integer.MAX_VALUE, turns_to_win);	
+					score = alphabeta(B, true, 5, Integer.MIN_VALUE, Integer.MAX_VALUE);	
 				else
-					score = alphabeta(B, true, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, turns_to_win);					
+					score = alphabeta(B, true, 6, Integer.MIN_VALUE, Integer.MAX_VALUE);					
 		
 				
 				if(score > maxEval){
