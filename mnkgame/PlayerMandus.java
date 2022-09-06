@@ -58,6 +58,15 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			B.markCell(c.i,c.j);
 			return c;
 		}
+
+		for(MNKCell MW: FC){
+			if(B.markCell(MW.i, MW.j) == myWin){
+				return MW;
+			}
+			else{
+				B.unmarkCell();
+			}
+		}
 	
 		
 		double score, maxEval = Integer.MIN_VALUE;
@@ -118,7 +127,7 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		if(depth <= 0 || board_.gameState != MNKGameState.OPEN || (System.currentTimeMillis()-start)/1000.0 > TIMEOUT*(99.0/100.0)){
 			numOfCombinations++;
             //l'albero ha profondità 0, o se non siamo in gioco o se stiamo per terminare la scelta, valutiamo
-			eval = evaluate(board_, depth);  
+			eval = evaluate(board_, depth, turns_to_win);  
 						
 		}else if(myNode){
 			eval = Integer.MAX_VALUE;
@@ -148,7 +157,8 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		return eval;	
 	}
 
-	public double evaluate(MNKBoard board, int depth){
+	public double evaluate(MNKBoard board, int depth, int turns_to_win){
+		System.out.println("turno: "+ turns_to_win);
 		double score = 0; //score attuale
 		int contaP1 = 0;
 		int contaP2 = 0;
@@ -157,15 +167,18 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		System.out.println("Combinazione numero : " + numOfCombinations);
 		if(board.gameState == myWin)
 		{
-			score =  45;//-100 - turns_to_win * 10; // arriviamo alla vittoria più velocemente
+			score = 100 - turns_to_win * 10; //45; // arriviamo alla vittoria più velocemente
+			System.out.println("score my win: "+ score);
 		}
 		else if(board.gameState == yourWin)
 		{
-			score = -45;//100 - turns_to_win * 10;
+			score = -100 - turns_to_win * 10; //-45;
+			System.out.println("score your win: "+ score);
 		}
 		else if(board.gameState == MNKGameState.DRAW)
 		{
 			score = 0;
+			System.out.println("score draw: "+ score);
 		}
 		else{
 			//da fare il controllo per righe, colonne e diagonali, cercando di rimanere nell'intervallo [-10, 10]
@@ -182,8 +195,7 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 				score += calculateCombination(board, combination);
 			}
 
-			System.out.println("Inizio righe");
-
+			//colonne
 			for (int j = 0; j < board.N; j++)
 			{
 				System.out.println("entro un attimo");
@@ -197,7 +209,7 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 				System.out.println("Combinazione : " + Arrays.toString(combination));
 				score += calculateCombination(board, combination);
 			}
-
+			//diagonale
 			for (int i = 0; i <= board.M - board.K; i++)
       		{
 				for (int j = 0; j <= board.N - board.K; j++)
@@ -215,50 +227,28 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 					score += calculateCombination(board, combination);
 				}
       		}
-
-			/* for (int i = 0; i < board.M; i++)
-			{
-				contaP1 = 0;
-				contaP2 = 0;
-				for (int j = 0; j < board.N; j++)
-				{
-					if(board.cellState(i, j) == MNKCellState.P1)
+			//anti diagonale
+			for (int i = 0; i <= board.M - board.K; i++)
+      		{
+				for (int j = board.N - 1; j >= board.K - 1; j--)
+	  			{
+					System.out.println("j: "+ j);
+					MNKCellState[] combination = new MNKCellState[board.M];
+					int c = 0;
+					int x = i;
+					int y = j;
+					while (c < board.K)
 					{
-						contaP1 ++;
-						ctrl = true;
+						combination[c] = board.B[x++][y--];
+						System.out.println("y: "+ y);
+						c++;
 					}
-					else if(board.cellState(i, j) == MNKCellState.P2)
-					{
-						contaP2 ++;
-						ctrl = false;
-					}
-					else{
-						if(board.cellState(i, j-1) == MNKCellState.P1 || board.cellState(i, j+1) == MNKCellState.P1)
-						{
-							contaP1 ++;
-						}
-						else if(board.cellState(i, j-1) == MNKCellState.P2 || board.cellState(i, j+1) == MNKCellState.P2)
-						{
-							contaP2 ++;
-						}
-						else if(board.cellState(i, j-1) == MNKCellState.FREE || board.cellState(i, j+1) == MNKCellState.FREE)
-						{
-							if(ctrl)
-							{
-								contaP1 ++;
-							}
-							else
-							{
-								contaP2++;
-							}
-						}
-					}
+					System.out.println("Combinazione anti diagonale : " + Arrays.toString(combination));
+					score += calculateCombination(board, combination);
 				}
-				System.out.println("P1 : " + contaP1 + " - P2 : " + contaP2);
-			} */
-			
+      		}
+
 		}
-		//controllo righe
 		return score;
 	}
 	 
