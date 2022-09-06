@@ -59,13 +59,33 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			return c;
 		}
 
-		for(MNKCell MW: FC){
+		for(MNKCell MW: FC){ // se con un passo posso vincere, faccio direttamente quel passo
 			if(B.markCell(MW.i, MW.j) == myWin){
 				return MW;
 			}
 			else{
 				B.unmarkCell();
 			}
+		}
+
+		for (MNKCell MM : FC){
+
+			B.markCell(MM.i, MM.j);
+			for(MNKCell YW : FC){
+				if(YW.i != MM.i && YW.j != MM.j){
+					if(B.markCell(YW.i, YW.j) == yourWin){
+						B.unmarkCell();
+						B.unmarkCell();
+						B.markCell(YW.i, YW.j);
+						return YW;
+					}
+					else{
+						B.unmarkCell();
+					}
+				}
+			}
+			B.unmarkCell();
+		
 		}
 	
 		
@@ -255,8 +275,8 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 	public double calculateCombination(MNKBoard board, MNKCellState[] combination)
 	{
 		double score = 0.0;
-		int[] occurrenciesP1 = new int[combination.length];
-		int[] occurrenciesP2 = new int[combination.length];
+		double[] occurrenciesP1 = new double[combination.length];
+		double[] occurrenciesP2 = new double[combination.length];
 
 		if(combination[0] == MNKCellState.P1)
 		{
@@ -273,19 +293,31 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			occurrenciesP2[0] = 1;
 		}
 
-		int maxP1 = occurrenciesP1[0];
-		int maxP2 = occurrenciesP2[0];
+		double maxP1 = occurrenciesP1[0];
+		double maxP2 = occurrenciesP2[0];
 
 		for(int i=1; i < combination.length;i++)
 		{
 			if(combination[i] == MNKCellState.P1 || combination[i] == MNKCellState.FREE)
 			{
-				occurrenciesP1[i] = occurrenciesP1[i-1] + 1;
+				if(combination[i] == MNKCellState.P1)
+				{
+					occurrenciesP1[i] = occurrenciesP1[i-1] + 1.5;
+				}
+				else{
+					occurrenciesP1[i] = occurrenciesP1[i-1] + 1;
+				}
 				occurrenciesP2[i] = 0;
 			}
 			else if(combination[i] == MNKCellState.P2 || combination[i] == MNKCellState.FREE)
 			{
-				occurrenciesP2[i] = occurrenciesP2[i-1] + 1;
+				if(combination[i] == MNKCellState.P2)
+				{
+					occurrenciesP2[i] = occurrenciesP2[i-1] + 1.5;
+				}
+				else{
+					occurrenciesP2[i] = occurrenciesP2[i-1] + 1;
+				}
 				occurrenciesP1[i] = 0;
 			}
 
@@ -302,10 +334,6 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		if(maxP1 >= board.K)
 		{
 			score += maxP1 - maxP2;
-		}
-		else if(maxP2 >= board.K)
-		{
-			score -= maxP2 - maxP1;
 		}
 		System.out.println(Arrays.toString(combination));
 		System.out.println(Arrays.toString(occurrenciesP1) + " " + Arrays.toString(occurrenciesP2));
