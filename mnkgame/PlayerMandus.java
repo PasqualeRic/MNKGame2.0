@@ -136,7 +136,7 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 
     public double alphabeta(MNKBoard board_, boolean myNode, int depth, double alpha, double beta, int turns_to_win){
 		
-		double eval = 0;
+		double best_score = 0;
 		int iteratore = 0;
 		int bestCol = 0;
 		int bestRow;
@@ -147,34 +147,49 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		if(depth <= 0 || board_.gameState != MNKGameState.OPEN || (System.currentTimeMillis()-start)/1000.0 > TIMEOUT*(99.0/100.0)){
 			numOfCombinations++;
             //l'albero ha profondità 0, o se non siamo in gioco o se stiamo per terminare la scelta, valutiamo
-			eval = evaluate(board_, depth, turns_to_win);  
+			best_score = evaluate(board_, depth, turns_to_win);  
+			return best_score;
 						
-		}else if(myNode){
-			eval = Integer.MAX_VALUE;
-			
-			for(MNKCell cell : freeCells){
-				board_.markCell(cell.i, cell.j);
-				eval = Math.min(eval,alphabeta(board_, false, depth-1, alpha, beta, turns_to_win + 1));
-				beta = Math.min(eval, beta);
-				board_.unmarkCell();
-				if(beta <= alpha)
-					break;
-			}
-			
-		}else{
-			eval = Integer.MIN_VALUE;
-			
-			for(MNKCell cell : freeCells){
-				board_.markCell(cell.i, cell.j);
-				eval = Math.max(eval, alphabeta(board_, true, depth-1, alpha, beta, turns_to_win + 1));
-				beta = Math.max(eval, alpha);
-				board_.unmarkCell();
-				if(beta <= alpha)
-					break;
-			}			
 		}
-		
-		return eval;	
+
+		for(MNKCell cell : freeCells){
+			board_.markCell(cell.i, cell.j);
+
+			if(myNode)
+			{
+				score = alphabeta(board_, false, depth + 1, alpha, beta, turns_to_win + 1);
+				if(best_score < score)
+				{
+					best_score = score - depth * 10;
+					
+					alpha = Math.max(alpha, best_score);
+					board_.unmarkCell();
+					if(beta <= alpha)
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				score = alphabeta(board_, true, depth + 1, alpha, beta, turns_to_win + 1);
+				
+				if(best_score > score)
+				{
+					best_score = score + depth * 10;
+					
+					beta = Math.min(beta, best_score);
+					board_.unmarkCell();
+					if(beta <= alpha)
+					{
+						break;
+					}
+				}
+			}
+			board_.unmarkCell();
+		}
+
+		return best_score;
 	}
 
 	public double evaluate(MNKBoard board, int depth, int turns_to_win){
@@ -187,87 +202,18 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		System.out.println("Combinazione numero : " + numOfCombinations);
 		if(board.gameState == myWin)
 		{
-			score = 100 - turns_to_win * 10; //45; // arriviamo alla vittoria più velocemente
+			score = 1000;
 			System.out.println("score my win: "+ score);
 		}
 		else if(board.gameState == yourWin)
 		{
-			score = -100 - turns_to_win * 10; //-45;
+			score = -1000;
 			System.out.println("score your win: "+ score);
 		}
 		else if(board.gameState == MNKGameState.DRAW)
 		{
 			score = 0;
 			System.out.println("score draw: "+ score);
-		}
-		else{
-			//da fare il controllo per righe, colonne e diagonali, cercando di rimanere nell'intervallo [-10, 10]
-			
-			// valuto righe
-			for (int i = 0; i < board.M; i++)
-			{
-				MNKCellState[] combination = new MNKCellState[board.N];
-				for (int j=0; j < board.N; j++)
-				{
-					combination[j] = board.B[i][j];
-					System.out.println(Arrays.toString(combination));
-				}
-				score += calculateCombination(board, combination);
-			}
-
-			//colonne
-			for (int j = 0; j < board.N; j++)
-			{
-				System.out.println("entro un attimo");
-				MNKCellState[] combination = new MNKCellState[board.M];
-				for (int i = 0; i < board.M; i++)
-				{
-					System.out.println("sto entrando anche qua");
-					combination[i] = board.B[i][j];
-					System.out.println(Arrays.toString(combination));
-				}
-				System.out.println("Combinazione : " + Arrays.toString(combination));
-				score += calculateCombination(board, combination);
-			}
-			//diagonale
-			for (int i = 0; i <= board.M - board.K; i++)
-      		{
-				for (int j = 0; j <= board.N - board.K; j++)
-	  			{
-					MNKCellState[] combination = new MNKCellState[board.M];
-					int c = 0;
-					int x = i;
-					int y = j;
-					while (c < board.K)
-					{
-						combination[c] = board.B[x++][y++];
-						c++;
-					}
-					System.out.println("Combinazione diagonale : " + Arrays.toString(combination));
-					score += calculateCombination(board, combination);
-				}
-      		}
-			//anti diagonale
-			for (int i = 0; i <= board.M - board.K; i++)
-      		{
-				for (int j = board.N - 1; j >= board.K - 1; j--)
-	  			{
-					System.out.println("j: "+ j);
-					MNKCellState[] combination = new MNKCellState[board.M];
-					int c = 0;
-					int x = i;
-					int y = j;
-					while (c < board.K)
-					{
-						combination[c] = board.B[x++][y--];
-						System.out.println("y: "+ y);
-						c++;
-					}
-					System.out.println("Combinazione anti diagonale : " + Arrays.toString(combination));
-					score += calculateCombination(board, combination);
-				}
-      		}
-
 		}
 		return score;
 	}

@@ -320,7 +320,7 @@ public class CmpPlayer implements MNKPlayer {
 		
 		if(myWin == MNKGameState.WINP1 && MC.length==0) //se la prima mossa spetta al mio giocatore può essere effettuata randomicamente
 		{
-			MNKCell c = FC[3];
+			MNKCell c = FC[rand.nextInt(FC.length)];
 			B.markCell(c.i,c.j);
 			return c;
 		}
