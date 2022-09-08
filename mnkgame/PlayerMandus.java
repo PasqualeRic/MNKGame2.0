@@ -133,10 +133,9 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
         return result;
 
     }
-
-    public double alphabeta(MNKBoard board_, boolean myNode, int depth, double alpha, double beta, int turns_to_win){
+	public double alphabeta(MNKBoard board_, boolean myNode, int depth, double alpha, double beta, int turns_to_win){
 		
-		double best_score = 0;
+		double eval = 0;
 		int iteratore = 0;
 		int bestCol = 0;
 		int bestRow;
@@ -147,50 +146,36 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		if(depth <= 0 || board_.gameState != MNKGameState.OPEN || (System.currentTimeMillis()-start)/1000.0 > TIMEOUT*(99.0/100.0)){
 			numOfCombinations++;
             //l'albero ha profondità 0, o se non siamo in gioco o se stiamo per terminare la scelta, valutiamo
-			best_score = evaluate(board_, depth, turns_to_win);  
-			return best_score;
+			eval = evaluate(board_, depth, turns_to_win);  
 						
-		}
-
-		for(MNKCell cell : freeCells){
-			board_.markCell(cell.i, cell.j);
-
-			if(myNode)
-			{
-				score = alphabeta(board_, false, depth + 1, alpha, beta, turns_to_win + 1);
-				if(best_score < score)
-				{
-					best_score = score - depth * 10;
-					
-					alpha = Math.max(alpha, best_score);
-					board_.unmarkCell();
-					if(beta <= alpha)
-					{
-						break;
-					}
-				}
+		}else if(myNode){
+			eval = Integer.MIN_VALUE;
+			
+			for(MNKCell cell : freeCells){
+				board_.markCell(cell.i, cell.j);
+				eval = Math.max(eval,alphabeta(board_, false, depth-1, alpha, beta, turns_to_win + 1) - depth * 10);
+				beta = Math.max(eval, beta);
+				board_.unmarkCell();
+				if(beta <= alpha)
+					break;
 			}
-			else
-			{
-				score = alphabeta(board_, true, depth + 1, alpha, beta, turns_to_win + 1);
-				
-				if(best_score > score)
-				{
-					best_score = score + depth * 10;
-					
-					beta = Math.min(beta, best_score);
-					board_.unmarkCell();
-					if(beta <= alpha)
-					{
-						break;
-					}
-				}
-			}
-			board_.unmarkCell();
+			
+		}else{
+			eval = Integer.MAX_VALUE;
+			
+			for(MNKCell cell : freeCells){
+				board_.markCell(cell.i, cell.j);
+				eval = Math.min(eval, alphabeta(board_, true, depth-1, alpha, beta, turns_to_win + 1) + depth * 10);
+				beta = Math.min(eval, alpha);
+				board_.unmarkCell();
+				if(beta <= alpha)
+					break;
+			}			
 		}
-
-		return best_score;
+		
+		return eval;	
 	}
+
 
 	public double evaluate(MNKBoard board, int depth, int turns_to_win){
 		System.out.println("turno: "+ turns_to_win);
