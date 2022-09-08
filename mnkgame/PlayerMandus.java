@@ -129,11 +129,13 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
             }
         }
 		B.markCell(result.i, result.j);		
+		System.out.println("Selected maxEval : " + maxEval);
 
         return result;
 
     }
-	public double alphabeta(MNKBoard board_, boolean myNode, int depth, double alpha, double beta, int turns_to_win){
+
+    public double alphabeta(MNKBoard board_, boolean myNode, int depth, double alpha, double beta, int turns_to_win){
 		
 		double eval = 0;
 		int iteratore = 0;
@@ -154,6 +156,7 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			for(MNKCell cell : freeCells){
 				board_.markCell(cell.i, cell.j);
 				eval = Math.max(eval,alphabeta(board_, false, depth-1, alpha, beta, turns_to_win + 1) - depth * 10);
+				System.out.println("This Eval : " + eval);
 				beta = Math.max(eval, beta);
 				board_.unmarkCell();
 				if(beta <= alpha)
@@ -176,29 +179,97 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 		return eval;	
 	}
 
-
 	public double evaluate(MNKBoard board, int depth, int turns_to_win){
-		System.out.println("turno: "+ turns_to_win);
+		//System.out.println("turno: "+ turns_to_win);
 		double score = 0; //score attuale
 		int contaP1 = 0;
 		int contaP2 = 0;
 		boolean ctrl = true;
-		System.out.println("Stato di gioco : " + board.gameState);
-		System.out.println("Combinazione numero : " + numOfCombinations);
+		//System.out.println("Stato di gioco : " + board.gameState);
+		//System.out.println("Combinazione numero : " + numOfCombinations);
 		if(board.gameState == myWin)
 		{
-			score = 1000;
-			System.out.println("score my win: "+ score);
+			score = 1000; //45; // arriviamo alla vittoria più velocemente
+			//System.out.println("score my win: "+ score);
 		}
 		else if(board.gameState == yourWin)
 		{
-			score = -1000;
-			System.out.println("score your win: "+ score);
+			score = -1000; //-45;
+			//System.out.println("score your win: "+ score);
 		}
 		else if(board.gameState == MNKGameState.DRAW)
 		{
 			score = 0;
-			System.out.println("score draw: "+ score);
+			//System.out.println("score draw: "+ score);
+		}
+		else{
+			//da fare il controllo per righe, colonne e diagonali, cercando di rimanere nell'intervallo [-10, 10]
+			
+			// valuto righe
+			for (int i = 0; i < board.M; i++)
+			{
+				MNKCellState[] combination = new MNKCellState[board.N];
+				for (int j=0; j < board.N; j++)
+				{
+					combination[j] = board.B[i][j];
+					System.out.println(Arrays.toString(combination));
+				}
+				score += calculateCombination(board, combination);
+			}
+
+			//colonne
+			for (int j = 0; j < board.N; j++)
+			{
+				//System.out.println("entro un attimo");
+				MNKCellState[] combination = new MNKCellState[board.M];
+				for (int i = 0; i < board.M; i++)
+				{
+					//System.out.println("sto entrando anche qua");
+					combination[i] = board.B[i][j];
+					//System.out.println(Arrays.toString(combination));
+				}
+				//System.out.println("Combinazione : " + Arrays.toString(combination));
+				score += calculateCombination(board, combination);
+			}
+			//diagonale
+			for (int i = 0; i <= board.M - board.K; i++)
+      		{
+				for (int j = 0; j <= board.N - board.K; j++)
+	  			{
+					MNKCellState[] combination = new MNKCellState[board.M];
+					int c = 0;
+					int x = i;
+					int y = j;
+					while (c < board.K)
+					{
+						combination[c] = board.B[x++][y++];
+						c++;
+					}
+					//System.out.println("Combinazione diagonale : " + Arrays.toString(combination));
+					score += calculateCombination(board, combination);
+				}
+      		}
+			//anti diagonale
+			for (int i = 0; i <= board.M - board.K; i++)
+      		{
+				for (int j = board.N - 1; j >= board.K - 1; j--)
+	  			{
+					//System.out.println("j: "+ j);
+					MNKCellState[] combination = new MNKCellState[board.M];
+					int c = 0;
+					int x = i;
+					int y = j;
+					while (c < board.K)
+					{
+						combination[c] = board.B[x++][y--];
+						//System.out.println("y: "+ y);
+						c++;
+					}
+					//System.out.println("Combinazione anti diagonale : " + Arrays.toString(combination));
+					score += calculateCombination(board, combination);
+				}
+      		}
+
 		}
 		return score;
 	}
@@ -262,14 +333,20 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			}
 		}
 
-		if(maxP1 >= board.K)
+		if(maxP1 >= board.K && maxP1 > maxP2)
 		{
-			score += maxP1 - maxP2;
+			System.out.println("Incremento score");
+			score += 1000 + maxP1 - maxP2;
 		}
-		System.out.println(Arrays.toString(combination));
+
+		else if(maxP2 > maxP1)
+		{
+			score += 1000 + ((maxP2 - maxP1) * 2);
+		}
+		/*System.out.println(Arrays.toString(combination));
 		System.out.println(Arrays.toString(occurrenciesP1) + " " + Arrays.toString(occurrenciesP2));
 		System.out.println(maxP1 + " " + maxP2);
-		System.out.println(score);
+		System.out.println(score);*/
 		return score;
 	}
     
