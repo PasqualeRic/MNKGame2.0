@@ -68,8 +68,7 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			}
 		}
 
-		for (MNKCell MM : FC){
-
+		for (MNKCell MM : FC){ //controllo se l'avversario può vincere con due passi
 			B.markCell(MM.i, MM.j);
 			for(MNKCell YW : FC){
 				if(YW.i != MM.i && YW.j != MM.j){
@@ -129,7 +128,6 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
             }
         }
 		B.markCell(result.i, result.j);		
-		System.out.println("Selected maxEval : " + maxEval);
 
         return result;
 
@@ -138,15 +136,10 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
     public double alphabeta(MNKBoard board_, boolean myNode, int depth, double alpha, double beta, int turns_to_win){
 		
 		double eval = 0;
-		int iteratore = 0;
-		int bestCol = 0;
-		int bestRow;
-		double score = 0;
-
 		MNKCell freeCells[] = board_.getFreeCells();
+		String lastCell = " ";
 		
 		if(depth <= 0 || board_.gameState != MNKGameState.OPEN || (System.currentTimeMillis()-start)/1000.0 > TIMEOUT*(99.0/100.0)){
-			numOfCombinations++;
             //l'albero ha profondità 0, o se non siamo in gioco o se stiamo per terminare la scelta, valutiamo
 			eval = evaluate(board_, depth, turns_to_win);  
 						
@@ -155,8 +148,8 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			
 			for(MNKCell cell : freeCells){
 				board_.markCell(cell.i, cell.j);
-				eval = Math.max(eval,alphabeta(board_, false, depth-1, alpha, beta, turns_to_win + 1) - depth * 10);
-				System.out.println("This Eval : " + eval);
+				lastCell = cell.i + " " + cell.j;
+				eval = Math.max(eval,alphabeta(board_, false, depth-1, alpha, beta, turns_to_win + 1));
 				beta = Math.max(eval, beta);
 				board_.unmarkCell();
 				if(beta <= alpha)
@@ -168,51 +161,43 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			
 			for(MNKCell cell : freeCells){
 				board_.markCell(cell.i, cell.j);
-				eval = Math.min(eval, alphabeta(board_, true, depth-1, alpha, beta, turns_to_win + 1) + depth * 10);
+				lastCell = cell.i + " " + cell.j;
+				eval = Math.min(eval, alphabeta(board_, true, depth-1, alpha, beta, turns_to_win + 1));
 				beta = Math.min(eval, alpha);
 				board_.unmarkCell();
 				if(beta <= alpha)
 					break;
 			}			
 		}
-		
 		return eval;	
 	}
 
 	public double evaluate(MNKBoard board, int depth, int turns_to_win){
 		//System.out.println("turno: "+ turns_to_win);
 		double score = 0; //score attuale
-		int contaP1 = 0;
-		int contaP2 = 0;
-		boolean ctrl = true;
 		//System.out.println("Stato di gioco : " + board.gameState);
 		//System.out.println("Combinazione numero : " + numOfCombinations);
 		if(board.gameState == myWin)
 		{
-			score = 1000; //45; // arriviamo alla vittoria più velocemente
-			//System.out.println("score my win: "+ score);
+			score = 1000;
 		}
 		else if(board.gameState == yourWin)
 		{
-			score = -1000; //-45;
-			//System.out.println("score your win: "+ score);
+			score = -1000;
 		}
 		else if(board.gameState == MNKGameState.DRAW)
 		{
 			score = 0;
-			//System.out.println("score draw: "+ score);
 		}
-		else{
-			//da fare il controllo per righe, colonne e diagonali, cercando di rimanere nell'intervallo [-10, 10]
-			
-			// valuto righe
+		else{			
+
+			//righe
 			for (int i = 0; i < board.M; i++)
 			{
 				MNKCellState[] combination = new MNKCellState[board.N];
 				for (int j=0; j < board.N; j++)
 				{
 					combination[j] = board.B[i][j];
-					System.out.println(Arrays.toString(combination));
 				}
 				score += calculateCombination(board, combination);
 			}
@@ -304,7 +289,7 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			{
 				if(combination[i] == MNKCellState.P1)
 				{
-					occurrenciesP1[i] = occurrenciesP1[i-1] + 1.5;
+					occurrenciesP1[i] = occurrenciesP1[i-1] + 2; //per favorire la scelta in quelle righe dove ci sono già celle marcate da noi
 				}
 				else{
 					occurrenciesP1[i] = occurrenciesP1[i-1] + 1;
@@ -315,7 +300,7 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			{
 				if(combination[i] == MNKCellState.P2)
 				{
-					occurrenciesP2[i] = occurrenciesP2[i-1] + 1.5;
+					occurrenciesP2[i] = occurrenciesP2[i-1] + 2;
 				}
 				else{
 					occurrenciesP2[i] = occurrenciesP2[i-1] + 1;
@@ -333,20 +318,18 @@ public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
 			}
 		}
 
-		if(maxP1 >= board.K && maxP1 > maxP2)
+
+		if(maxP1 >= board.K)
 		{
-			System.out.println("Incremento score");
-			score += 1000 + maxP1 - maxP2;
+			score = 10 * (maxP1 - maxP2);
 		}
 
-		else if(maxP2 > maxP1)
-		{
-			score += 1000 + ((maxP2 - maxP1) * 2);
-		}
 		/*System.out.println(Arrays.toString(combination));
 		System.out.println(Arrays.toString(occurrenciesP1) + " " + Arrays.toString(occurrenciesP2));
 		System.out.println(maxP1 + " " + maxP2);
 		System.out.println(score);*/
+		System.out.println(Arrays.toString(combination));
+		System.out.println(score);
 		return score;
 	}
     

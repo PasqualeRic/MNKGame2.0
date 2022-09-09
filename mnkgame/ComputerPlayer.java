@@ -94,10 +94,6 @@ public class ComputerPlayer implements MNKPlayer {
 		
 		double eval;
 
-		System.out.println("Combinazione numero : " + numOfCombinations);
-
-		System.out.println(b.gameState);
-
 		if(b.gameState == myWin){
 			eval = 45;
 			eval -= (6 - d);                  //diminuizione score all'aumentare della profondità. Avendo massimo 6 livelli il range è [39, 45]
@@ -110,7 +106,6 @@ public class ComputerPlayer implements MNKPlayer {
 			eval = evalOpenConfig(b);         //valutazione nodo non foglia
 		}
 		
-		System.out.println("EVAL ASSOCIATO : " + eval);
 		return eval;
 	}
 	
@@ -124,13 +119,11 @@ public class ComputerPlayer implements MNKPlayer {
 	La seguente funzione si limita a sommare gli score restituiti dalle 4 chiamate a evaluateLine()*/
 	public double evalOpenConfig(MNKBoard b_){	
 
-		System.out.println(" ------------ Sono entrato nella eval ----------------");
 		
 		double score = 0;
 		
 		MNKCell[] mc = b_.getMarkedCells();
 		MNKCell lastMarkedCell = mc[mc.length-1];  //ultima cella marcata
-		System.out.println("Ultima cella marcata : " + lastMarkedCell);
 		int rows = b_.M;              //num righe
 		int cols = b_.N;              //num colonne
 		int k = b_.K;
@@ -153,7 +146,6 @@ public class ComputerPlayer implements MNKPlayer {
 			MNKCellState[] rowLine;			
 			
 			rowLine = bb[lastMarkedCell.i];
-			System.out.println("Valuto riga " + rowLine.toString());
 
 			score += evaluateLine(rowLine);
 			rowLine = null;			
@@ -167,7 +159,6 @@ public class ComputerPlayer implements MNKPlayer {
 				colLine.add(bb[row][lastMarkedCell.j]);
 			}            
 
-			System.out.println("Valuto colonna " + colLine.toString());
 
 			score += evaluateLine(colLine.toArray(new MNKCellState[colLine.size()]));	
 			colLine = null;				
@@ -209,7 +200,6 @@ public class ComputerPlayer implements MNKPlayer {
 		}
 		
 		if(diagLine.size() >= k){                       //controllo se il num di celle su tale diagonale è sufficiente a contenere k elementi
-			System.out.println("Valuto diagonale " + diagLine);                   
 			score += evaluateLine(diagLine.toArray(new MNKCellState[diagLine.size()]));				
 		}
 		diagLine = null;
@@ -235,13 +225,10 @@ public class ComputerPlayer implements MNKPlayer {
 		}
 		
 		if(antiDiagLine.size() >= k){    
-			System.out.println("Valuto antidiagonale " + antiDiagLine);                   
 			score += evaluateLine(antiDiagLine.toArray(new MNKCellState[antiDiagLine.size()]));				
 		}
 		antiDiagLine = null;	
 
-		System.out.println("Score che ritorno : " + score);
-		System.out.println("------ fine open ------");
 		
 		return score;
 		
@@ -270,7 +257,6 @@ public class ComputerPlayer implements MNKPlayer {
 		
 		int[] myLine = maxSubLineOccupiedCells(l, myCell);
 
-		System.out.println("Mia linea : " + myLine[0] + " di cui " + myLine[1] + " libere");
 		
 		if(myLine[0] >= B.K){
 			score += (myLine[0] - myLine[1]);
@@ -279,14 +265,12 @@ public class ComputerPlayer implements MNKPlayer {
 		//passo a valutare (l'eventuale) sottoriga dell'avversario
 		int[] yourLine = maxSubLineOccupiedCells(l, yourCell);
 		
-		System.out.println("Sua linea : " + myLine[0] + " di cui " + myLine[1] + " libere");
 
 
 		if(yourLine[0] >= B.K){
 			score -= (yourLine[0] - yourLine[1]);
 		}
 		
-		System.out.println("Score attuale : " + score);
 		return score;		
 	}	
 
